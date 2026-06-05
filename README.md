@@ -26,4 +26,4 @@ All 18 standard moves (R, R', R2, L, L', L2 ...) are implemented.
 
 | File | Description |
 |------|-------------|
-| `Cube_3.h` | Cube representation, all 18 moves, print and init functions |
+| `Cube_3.h` | Cube representation, all 18 moves, print and initialization functions |
