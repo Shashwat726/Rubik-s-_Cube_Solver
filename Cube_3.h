@@ -220,7 +220,7 @@ void Cube3::B(){
     Rotate_Face(5, '+', 'h');
 }
 void Cube3::B_P(){
-    //Top -> Right -> Left -> Right -> Top
+    //Top -> Right -> Bottom -> Left -> Top
     Rotate_Side(Cube[0][0], Cube[0][1], Cube[0][2], Cube[3][2], Cube[3][5], Cube[3][8], Cube[1][8], Cube[1][7], Cube[1][6], Cube[2][6], Cube[2][3], Cube[2][0], 'h');
     Rotate_Face(5, '-', 'h');
 }
