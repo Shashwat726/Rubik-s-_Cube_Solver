@@ -82,5 +82,3 @@ Sticker order per face:
 ## Planned
 - Move table architecture for sub-second solving
 - 3D visualizer (React + Three.js)
-- Python bridge (Flask API)
-- Arduino robot integration
