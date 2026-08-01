@@ -71,16 +71,15 @@ class Edges{
         {12, {{1,1},{4,7}}}
     };
 
-    int Hash_Orientation();
+    
     int Hash_NonSlice();
     int Hash_Slice_P();
     public:
-        int Hash_Slice(Cube3 &C);
+        int Hash_Orientation();
         void Orientation(Cube3 &C);
-        int Out_of_Slice(Cube3 &C);
-        int Hash_Phase1B(Cube3 &C);
         int Hash_Phase2A();
         int Hash_Phase2B();
+        int UDS();
 };
 
 void Edges::Orientation(Cube3 &C){
@@ -93,36 +92,11 @@ void Edges::Orientation(Cube3 &C){
     }
 }
 
-int Edges::Out_of_Slice(Cube3 &C){
-    int out_of_slice = 0;
-    for(int i = 5; i <= 8; i++){
-        int first = C.Get_num(edges[i][0].first, edges[i][0].second);
-        int second = C.Get_num(edges[i][1].first, edges[i][1].second);
-        if(first <= 1 || second <= 1)
-            out_of_slice++;
-    }
-    return out_of_slice;
-}
-
 int Edges::Hash_Orientation(){
         int key = 0; 
         for(int i = 1; i <= 12; i++)
             key = key * 2 + curr_O[i];
         return key;
-}
-
-int Edges::Hash_Slice(Cube3 &C){
-    int key =0;
-    for(int i = 1; i <= 12; i++){
-        int first = C.Get_num(edges[i][0].first, edges[i][0].second);
-        int second = C.Get_num(edges[i][1].first, edges[i][1].second);
-        key = key*2 + ((first > 1 && second > 1)? 1 : 0);
-    }
-    return key;
-}
-
-int Edges::Hash_Phase1B(Cube3 &C){
-    return Hash_Orientation() * 4096 + Hash_Slice(C);
 }
 
 int Edges::Hash_NonSlice(){
@@ -174,4 +148,35 @@ int Edges::Hash_Phase2A(){
 
 int Edges::Hash_Phase2B(){
     return Hash_Slice_P();
+}
+
+int Edges::UDS() {
+    int rank = 0;
+    int r = 4;  // number of slice edges left to find
+
+    for(int pos = 12; pos >= 1; pos--) {
+
+        bool isSlice =
+            (curr_piece[pos] == 5 ||
+             curr_piece[pos] == 6 ||
+             curr_piece[pos] == 7 ||
+             curr_piece[pos] == 8);
+
+        if(isSlice) {
+            r--;
+        }
+        else if(r > 0) {
+            // rank += C(pos-1, r-1)
+            int n = pos - 1;
+            int k = r - 1;
+
+            int comb = 1;
+            for(int i = 1; i <= k; i++)
+                comb = comb * (n - k + i) / i;
+
+            rank += comb;
+        }
+    }
+
+    return rank;
 }

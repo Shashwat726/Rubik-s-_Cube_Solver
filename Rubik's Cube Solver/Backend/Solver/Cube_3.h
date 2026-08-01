@@ -7,7 +7,7 @@ using namespace std;
 
 class Cube3{
     /* 
-    The "Cube" represents the cube with each row is a face as follows
+    The "Cube" represents the cube where each row is a face as follows
     Row 0 : Top
     Row 1 : Bottom
     Row 2 : Left
@@ -57,7 +57,6 @@ class Cube3{
 
     public:
         void move(string m);    //This function accepts the move to be made and calls the required function
-        bool Is_solved();       //This function returns true if the cube is solved and false otherwise
         void init(int M[6][9]); //This function is used to initialize the cube
         void init();            //This function initializes the cube to a solved state
         void print();           //This function prints the cube in an open cube format
@@ -268,14 +267,6 @@ void Cube3::move(string m){
     else if(m == "B") B();
     else if(m == "B'") B_P();
     else if(m == "B2") B_2();
-}
-
-bool Cube3::Is_solved(){
-    for(int i = 0; i < 6; i++)
-        for(int j = 0; j < 9; j++)
-            if(Cube[i][j] != i)
-                return false;
-    return true;
 }
 
 void Cube3::init(int M[6][9]){

@@ -11,6 +11,10 @@ using namespace std;
 
 class Fetcher_2{
     /*
+    The table-based solver passes cp and ep directly into Fetch(). The older
+    matrix-oriented wording below is background for how these databases were
+    originally designed; the current lookup code is the source of truth.
+
     Loads the Phase 2 databases and provides the heuristic for Phase 2 IDA*.
 
     Data_A : Loaded from Phase2_A.bin
@@ -34,20 +38,19 @@ class Fetcher_2{
     Edges E;
     public:
         Fetcher_2();
-        int Fetch(Cube3 &C);
-        bool isSolved(Cube3 &C);
+        int Fetch(int cp, int ep);
 };
 
 Fetcher_2::Fetcher_2(){
     
     int key,moves_req;
-    ifstream fileA("databases/Phase2_A.bin", ios::binary);
+    ifstream fileA("../Databases/Phase2_A.bin", ios::binary);
     while(fileA.read((char*)&key, sizeof(int))){
         fileA.read((char*)&moves_req, sizeof(int));
         Data_A[key]=moves_req;
     }
     fileA.close();
-    ifstream fileB("databases/Phase2_B.bin", ios::binary);
+    ifstream fileB("../Databases/Phase2_B.bin", ios::binary);
     while(fileB.read((char*)&key, sizeof(int))){
         fileB.read((char*)&moves_req, sizeof(int));
         Data_B[key]=moves_req;
@@ -55,16 +58,6 @@ Fetcher_2::Fetcher_2(){
     fileB.close();
 }
 
-int Fetcher_2::Fetch(Cube3 &C){
-    O.Preprocess(C);
-    E.Orientation(C);
-    int keyA=O.Hash_Permutation();
-    int keyB=E.Hash_Phase2A()*24+E.Hash_Phase2B();
-    int a=Data_A.count(keyA) ? Data_A[keyA] : 20;
-    int b=Data_B.count(keyB) ? Data_B[keyB] : 20;
-    return max(a,b);
-}
-
-bool Fetcher_2::isSolved(Cube3 &C){
-    return (Fetch(C) == 0) ? true : false;
+int Fetcher_2::Fetch(int cp, int ep){
+    return max(Data_A[cp],Data_B[ep]);
 }
