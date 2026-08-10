@@ -83,8 +83,11 @@ class Edges{
         int Hash_Phase2A();
         int Hash_Phase2B();
         int UDS();
+<<<<<<<< HEAD:Backend/Solver/Edges.h
         bool is_valid();
         int get_parity();
+========
+>>>>>>>> 9173473365a7b4fe299ca4dc65e455ca3223ca8f:Rubik's Cube Solver/Backend/Solver/Edges.h
 };
 
 bool Edges::is_valid(){

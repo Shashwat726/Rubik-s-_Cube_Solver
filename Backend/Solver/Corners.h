@@ -68,8 +68,11 @@ class Corners{
         void Preprocess(Cube3 &C);
         int Hash_Orientation();
         int Hash_Permutation();
+<<<<<<<< HEAD:Backend/Solver/Corners.h
         bool is_valid();
         int get_parity();
+========
+>>>>>>>> 9173473365a7b4fe299ca4dc65e455ca3223ca8f:Rubik's Cube Solver/Backend/Solver/Corners.h
 };
 
 bool Corners::is_valid(){

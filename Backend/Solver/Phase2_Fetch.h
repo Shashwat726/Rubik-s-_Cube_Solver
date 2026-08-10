@@ -48,15 +48,23 @@ Fetcher_2::Fetcher_2(){
     const string DB = "../Databases/";
     #endif
     int key,moves_req;
+<<<<<<<< HEAD:Backend/Solver/Phase2_Fetch.h
     ifstream fileA(DB + "Phase2_A.bin", ios::binary);
     if(!fileA.is_open()) cerr << "Failed to open " << DB + "Phase2_A.bin" << "\n";
+========
+    ifstream fileA("../Databases/Phase2_A.bin", ios::binary);
+>>>>>>>> 9173473365a7b4fe299ca4dc65e455ca3223ca8f:Rubik's Cube Solver/Backend/Solver/Phase2_Fetch.h
     while(fileA.read((char*)&key, sizeof(int))){
         fileA.read((char*)&moves_req, sizeof(int));
         Data_A[key]=moves_req;
     }
     fileA.close();
+<<<<<<<< HEAD:Backend/Solver/Phase2_Fetch.h
     ifstream fileB(DB + "Phase2_B.bin", ios::binary);
     if(!fileB.is_open()) cerr << "Failed to open " << DB + "Phase2_B.bin" << "\n";
+========
+    ifstream fileB("../Databases/Phase2_B.bin", ios::binary);
+>>>>>>>> 9173473365a7b4fe299ca4dc65e455ca3223ca8f:Rubik's Cube Solver/Backend/Solver/Phase2_Fetch.h
     while(fileB.read((char*)&key, sizeof(int))){
         fileB.read((char*)&moves_req, sizeof(int));
         Data_B[key]=moves_req;
@@ -65,11 +73,14 @@ Fetcher_2::Fetcher_2(){
 }
 
 int Fetcher_2::Fetch(int cp, int ep){
+<<<<<<<< HEAD:Backend/Solver/Phase2_Fetch.h
     int keyA = cp;
     int keyB = ep;
     auto itA = Data_A.find(keyA);
     auto itB = Data_B.find(keyB);
     if (itA == Data_A.end() || itB == Data_B.end())
         return 0;
+========
+>>>>>>>> 9173473365a7b4fe299ca4dc65e455ca3223ca8f:Rubik's Cube Solver/Backend/Solver/Phase2_Fetch.h
     return max(Data_A[cp],Data_B[ep]);
 }

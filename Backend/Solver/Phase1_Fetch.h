@@ -4,8 +4,13 @@
 #include<fstream>
 #include<unordered_map>
 #include<cstdlib>
+<<<<<<<< HEAD:Backend/Solver/Phase1_Fetch.h
 #include"Corners.h"
 #include"Edges.h"
+========
+#include"corners.h"
+#include"edges.h"
+>>>>>>>> 9173473365a7b4fe299ca4dc65e455ca3223ca8f:Rubik's Cube Solver/Backend/Solver/Phase1_Fetch.h
 #include"Cube_3.h"
 
 using namespace std;
@@ -52,15 +57,23 @@ Fetcher_1::Fetcher_1(){
     #endif
 
     int key,moves_req;
+<<<<<<<< HEAD:Backend/Solver/Phase1_Fetch.h
     ifstream fileA(DB + "Phase1_A.bin", ios::binary);
     if(!fileA.is_open()) cerr << "Failed to open " << DB + "Phase1_A.bin" << "\n";
+========
+    ifstream fileA("../Databases/Phase1_A.bin", ios::binary);
+>>>>>>>> 9173473365a7b4fe299ca4dc65e455ca3223ca8f:Rubik's Cube Solver/Backend/Solver/Phase1_Fetch.h
     while(fileA.read((char*)&key, sizeof(int))){
         fileA.read((char*)&moves_req, sizeof(int));
         Data_A[key]=moves_req;
     }
     fileA.close();
+<<<<<<<< HEAD:Backend/Solver/Phase1_Fetch.h
     ifstream fileB(DB + "Phase1_B.bin", ios::binary);
     if(!fileB.is_open()) cerr << "Failed to open " << DB + "Phase1_B.bin" << "\n";
+========
+    ifstream fileB("../Databases/Phase1_B.bin", ios::binary);
+>>>>>>>> 9173473365a7b4fe299ca4dc65e455ca3223ca8f:Rubik's Cube Solver/Backend/Solver/Phase1_Fetch.h
     while(fileB.read((char*)&key, sizeof(int))){
         fileB.read((char*)&moves_req, sizeof(int));
         Data_B[key]=moves_req;
@@ -72,6 +85,7 @@ int Fetcher_1::Fetch(int co, int eo, int uds){
     int keyA = co * 495 + uds;
     int keyB = eo * 495 + uds;
     auto itA = Data_A.find(keyA);
+<<<<<<<< HEAD:Backend/Solver/Phase1_Fetch.h
     auto itB = Data_B.find(keyB);
 
 if (itA == Data_A.end() || itB == Data_B.end()) {
@@ -79,4 +93,17 @@ if (itA == Data_A.end() || itB == Data_B.end()) {
 }
 
 return max(itA->second, itB->second);
+========
+auto itB = Data_B.find(keyB);
+
+if (itA == Data_A.end() || itB == Data_B.end()) {
+    std::cerr << "Missing key!\n";
+    std::cerr << "co=" << co
+              << " eo=" << eo
+              << " uds=" << uds << '\n';
+    return 99;
+}
+
+return std::max(itA->second, itB->second);
+>>>>>>>> 9173473365a7b4fe299ca4dc65e455ca3223ca8f:Rubik's Cube Solver/Backend/Solver/Phase1_Fetch.h
 }

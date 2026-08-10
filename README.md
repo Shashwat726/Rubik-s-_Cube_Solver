@@ -11,9 +11,7 @@ The project started with a sticker-matrix solver and pattern databases. It now a
 - Move tables for CO, EO, UDS, CP, and EP: done
 - Phase 1 and Phase 2 pattern databases: done
 - Table-based IDA* Kociemba solver: done
-- WebAssembly (Emscripten) integration: done
-- React / Three.js visualizer & interactive UI: done
-- Mobile responsiveness & robust validity checks: done
+- React / Three.js visualizer: in progress
 - Robot integration: planned
 
 ## Cube representation
@@ -105,7 +103,6 @@ This keeps the coordinate independent of corner permutation, which is necessary 
 | `Backend/Generators/Phase1_Gen.cpp` | Generates `Phase1_A.bin` and `Phase1_B.bin` |
 | `Backend/Generators/Phase2_Gen.cpp` | Generates `Phase2_A.bin` and `Phase2_B.bin` |
 | `Backend/Databases/` | Generated move tables and pattern databases |
-| `Frontend/rubiks-cube/` | React and Three.js frontend application |
 
 ## Generated files
 
@@ -165,6 +162,7 @@ The displayed time begins after the 54 values have been read, so it measures cub
 
 ## Next directions
 
-- Add a clean API layer for the robot controller.
+- Connect the solver to the React / Three.js visualizer.
+- Add a clean API layer for the frontend or robot controller.
 - Improve search pruning and collect timing statistics across deeper scrambles.
 - Turn a validated move sequence into reliable robot actions.
