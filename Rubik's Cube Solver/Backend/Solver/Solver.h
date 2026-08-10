@@ -78,9 +78,20 @@ bool PathFinder::Path2(cube &c, int depth, int max_depth, string pre_move){
 vector<string> PathFinder::Path_Finder(Cube3 &C){
     seq1.clear();
     seq2.clear();
+
+    Corners O_check;
+    Edges E_check;
+    O_check.Preprocess(C);
+    E_check.Orientation(C);
+    if(!O_check.is_valid() || !E_check.is_valid() || (O_check.get_parity() != E_check.get_parity())){
+        return {"This state of the Rubik's Cube cannot be solved with standard moves"};
+    }
+
     int max_depth;
     cube c = F.to_cube(C);
 
+    if(F.is_Solved(c))
+        return seq1;
     max_depth = F1.Fetch(c.co, c.eo, c.uds);
     while(true){
         if(Path1(c, 0, max_depth, "\0"))
@@ -103,6 +114,10 @@ vector<string> PathFinder::Path_Finder(Cube3 &C){
     for (const string &move : seq2)
     C.move(move);
 
+    if(seq1.back()[0] == seq2.front()[0]){
+        seq1.back()+="'";
+        seq2.erase(seq2.begin());
+    }
     seq1.insert(seq1.end(), seq2.begin(), seq2.end());
     return seq1;
 }

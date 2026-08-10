@@ -1,4 +1,4 @@
-    /*
+/*
 ==============================================================
     Rubik's Cube Solver - Console Entry Point
 
@@ -14,7 +14,7 @@
 #include <chrono>
 #include <iostream>
 #include <vector>
-
+#include<chrono>
 #include "Cube_3.h"
 #include "Solver.h"
 
@@ -30,7 +30,7 @@ int main(){
     for(int i = 0; i < 6; i++)
         for(int j = 0; j < 9; j++){
             cin >> cube[i][j];
-            if(cube[i][j]>5 &&cube[i][j]<0){
+            if(cube[i][j]>5 || cube[i][j]<0){
                 cout<<endl<<"Invalid Cube Colour entered.\nProgram terminated";
                 exit(EXIT_FAILURE);
             }
@@ -44,12 +44,20 @@ int main(){
 
     solution = P.Path_Finder(C);
 
+    if (solution.size() == 1 && solution[0][0] == 'T') {
+        cout << "\n" << solution[0] << "\n";
+        exit(EXIT_FAILURE);
+    } else if(solution.empty())
+        cout<<"\nCube already Solved.";
+    else{
+
     cout << "\nMoves to solve the cube:\n\n";
     for(const auto& move : solution)
         cout << move << " ";
 
     cout << "\nCube solved. Moves required: " << solution.size();
-    cout << "\nSolved cube:\n";
+    }
+    cout << "\nSolved cube:\n"; 
     C.print();
 
     auto end = chrono::steady_clock::now();

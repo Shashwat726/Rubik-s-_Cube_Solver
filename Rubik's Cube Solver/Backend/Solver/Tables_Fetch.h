@@ -24,15 +24,18 @@ class Fetcher{
     CO, EO and UDS contain all 18 moves; CP and EP contain the first ten
     legal Phase 2 moves from Solver.h.
     */
-    int co[6561][18];
-    int eo[4096][18];
-    int uds[495][18];
+    // Keep large move tables on the heap. Fetcher is created per solve and
+    // inline arrays overflow WebAssembly's small fixed stack.
+    int(*co)[18] = new int[6561][18];
+    int(*eo)[18] = new int[4096][18];
+    int(*uds)[18] = new int[495][18];
     int(*cp)[10] = new int[40320][10];
     int(*ep)[10] = new int[967680][10];
     Corners O;
     Edges E;
     public:
         Fetcher();
+        ~Fetcher();
         cube to_cube(Cube3 &C);
         bool is_G1(cube &c);
         bool is_Solved(cube &c);
@@ -46,26 +49,53 @@ class Fetcher{
         int get_ep(int state, int move);
 };
 
+static void check(int co,int eo,int uds,int cp,int ep,int move,const char* where){
+    if(co<0||co>=6561||eo<0||eo>=4096||uds<0||uds>=495||cp<0||cp>=40320||ep<0||ep>=967680||move<0||move>=18){
+        cerr<<"OUT OF RANGE in "<<where<<": co="<<co<<" eo="<<eo<<" uds="<<uds
+            <<" cp="<<cp<<" ep="<<ep<<" move="<<move<<"\n";
+        exit(1);
+    }
+} 
+
 Fetcher::Fetcher(){
-    ifstream file_co("../Databases/CO.bin", ios::binary);
-    file_co.read((char*)co, sizeof(co));
+    #ifdef __EMSCRIPTEN__
+    const string DB = "/Databases/";
+    #else
+    const string DB = "../Databases/";
+    #endif
+
+    ifstream file_co(DB + "CO.bin", ios::binary);
+    if(!file_co.is_open()) cerr << "Failed to open " << DB + "CO.bin" << "\n";
+    file_co.read((char*)co, sizeof(int) * 6561 * 18);
     file_co.close();
-     
-    ifstream file_eo("../Databases/EO.bin", ios::binary);
-    file_eo.read((char*)eo, sizeof(eo));
+
+    ifstream file_eo(DB + "EO.bin", ios::binary);
+    if(!file_eo.is_open()) cerr << "Failed to open " << DB + "EO.bin" << "\n";
+    file_eo.read((char*)eo, sizeof(int) * 4096 * 18);
     file_eo.close();
 
-    ifstream file_uds("../Databases/UDS.bin", ios::binary);
-    file_uds.read((char*)uds, sizeof(uds));
+    ifstream file_uds(DB + "UDS.bin", ios::binary);
+    if(!file_uds.is_open()) cerr << "Failed to open " << DB + "UDS.bin" << "\n";
+    file_uds.read((char*)uds, sizeof(int) * 495 * 18);
     file_uds.close();
-    
-    ifstream file_cp("../Databases/CP.bin", ios::binary);
+
+    ifstream file_cp(DB + "CP.bin", ios::binary);
+    if(!file_cp.is_open()) cerr << "Failed to open " << DB + "CP.bin" << "\n";
     file_cp.read((char*)cp, sizeof(int)*40320*10);
     file_cp.close();
 
-    ifstream file_ep("../Databases/EP.bin", ios::binary);
+    ifstream file_ep(DB + "EP.bin", ios::binary);
+    if(!file_ep.is_open()) cerr << "Failed to open " << DB + "EP.bin" << "\n";
     file_ep.read((char*)ep, sizeof(int)*967680*10);
     file_ep.close();
+}
+
+Fetcher::~Fetcher(){
+    delete[] co;
+    delete[] eo;
+    delete[] uds;
+    delete[] cp;
+    delete[] ep;
 }
 
 int Fetcher::get_co(int state, int move){
@@ -89,6 +119,7 @@ int Fetcher::get_ep(int state, int move){
 }
 
 void Fetcher::apply_move(cube &c, int move){
+    check(c.co,c.eo,c.uds,c.cp,c.ep,move,"apply_move");
     c.co=co[c.co][move];
     c.eo=eo[c.eo][move];
     c.uds=uds[c.uds][move];
@@ -97,12 +128,14 @@ void Fetcher::apply_move(cube &c, int move){
 }
 
 void Fetcher::apply_move_p1(cube &c, int move){
-    c.co=co[c.co][move];
+    check(c.co,c.eo,c.uds,c.cp,c.ep,move,"apply_move");
+    c.co = co[c.co][move];
     c.eo=eo[c.eo][move];
     c.uds=uds[c.uds][move];
 }
 
 void Fetcher::apply_move_p2(cube &c, int move){
+    check(c.co,c.eo,c.uds,c.cp,c.ep,move,"apply_move");
     c.cp=cp[c.cp][move];
     c.ep=ep[c.ep][move];
 }
