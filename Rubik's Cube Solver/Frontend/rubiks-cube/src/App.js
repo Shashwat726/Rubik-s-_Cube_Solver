@@ -255,9 +255,20 @@ function App({ onCubeComplete }) {
 
   function startInput() {
   if (!solverModuleRef.current) {
-    window.CubeSolverModule({ locateFile: (path) => '/wasm/' + path }).then((Module) => {
-      solverModuleRef.current = Module;
-    });
+    if (!window.CubeSolverModule) {
+      const script = document.createElement('script');
+      script.src = process.env.PUBLIC_URL + '/wasm/solver.js';
+      script.onload = () => {
+        window.CubeSolverModule({ locateFile: (path) => process.env.PUBLIC_URL + '/wasm/' + path }).then((Module) => {
+          solverModuleRef.current = Module;
+        });
+      };
+      document.body.appendChild(script);
+    } else {
+      window.CubeSolverModule({ locateFile: (path) => process.env.PUBLIC_URL + '/wasm/' + path }).then((Module) => {
+        solverModuleRef.current = Module;
+      });
+    }
   }
   // The Three.js event handler and render loop read this ref, so update it
   // immediately instead of waiting for React state to re-render.
