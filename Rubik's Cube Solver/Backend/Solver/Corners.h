@@ -10,7 +10,13 @@
 using namespace std; 
 
 class Corners{
-    /*
+    /* 
+    Corner orientation follows the Y/W sticker, not colour precedence. A
+    corner is orientation 0 when its Y/W sticker is on U/D, orientation 1
+    when it is on F/B, and orientation 2 when it is on L/R. This is important
+    because the resulting CO value must be independent of corner permutation
+    before it can be used as a move-table coordinate.
+
     Each corner of the cube is identified by 3 stickers.
     
     map_int : Each corner piece has a unique integer key computed as:
@@ -38,7 +44,7 @@ class Corners{
     Preprocess()      : Fills current[] with piece and orientation for all 8 corners.
     Preprocess(arr[]) : Same but only updates the 4 corners in arr[]. Used during solving.
     Hash()            : Encodes full corner state (position + orientation) → long long
-    Hash_Orientation(): Encodes only corner orientations → int (0 to 6560)
+    Hash_Orientation(): Encodes only corner orientations → int (0 to 2186)
     Hash_Permutation(): Encodes only corner positions using Lehmer code → int (0 to 40319)
     Right_call()      : Calls incremental Preprocess() for the 4 corners affected by a face move.
                         U→{1,2,3,4} D→{5,6,7,8} L→{1,3,5,7} R→{2,4,6,8} F→{3,4,7,8} B→{1,2,5,6}
@@ -58,11 +64,8 @@ class Corners{
 
     public:
         void Preprocess(Cube3 &C);
-        void Preprocess(Cube3 &C, int new_corners[]);
-        long long Hash();
         int Hash_Orientation();
         int Hash_Permutation();
-        void Right_call(Cube3 &C, char f);
 };
 
 void Corners::Preprocess(Cube3 &C){
@@ -73,82 +76,24 @@ void Corners::Preprocess(Cube3 &C){
             arr[k]=C.Get_num(i, j);
             k++;
         }
-        int first = arr[0];
-        sort(arr, arr+3);
-        int key = arr[0] * 36 + arr[1] * 6 + arr[2];
-        int piece = map_int[key];
+        // Corner orientation is determined by the face holding this cubie's
+        // Y/W sticker, not by the numerical rank of the U/D-slot sticker.
         int orientation = 0;
-        for(; orientation<3 && first != arr[orientation]; orientation++);
-        current[corner_num].first = piece;
-        current[corner_num].second = orientation;
-    }
-}
-
-long long Corners::Hash(){
-    long long key = 0;
-    for(int i = 1; i <= 8; i++){
-        int digit = (current[i].first - 1) * 3 + current[i].second;
-        key = key * 24 + digit;
-    }
-    return key;
-}
-
-void Corners:: Right_call(Cube3 &C, char f){
-    switch(f){
-        case 'U' :  {
-                        int corners_changed[4] = {1, 2, 3, 4};
-                        Preprocess(C, corners_changed);
-                        break;
-                    }
-
-        case 'D' :  {
-                        int corners_changed[4] = {5, 6, 7, 8};
-                        Preprocess(C, corners_changed);
-                        break;
-                    }
-
-        case 'L' :  {
-                        int corners_changed[4] = {1, 3, 5, 7};
-                        Preprocess(C, corners_changed);
-                        break;
-                    }
-
-        case 'R' :  {
-                        int corners_changed[4] = {2, 4, 6, 8};
-                        Preprocess(C, corners_changed);
-                        break;
-                    }
-
-        case 'F' :  {
-                        int corners_changed[4] = {3, 4, 7, 8};
-                        Preprocess(C, corners_changed);
-                        break;
-                    }
-
-        case 'B' :  {
-                        int corners_changed[4] = {1, 2, 5, 6};
-                        Preprocess(C, corners_changed);
-                        break;
-                    }
-    }
-    
-}
-
-void Corners::Preprocess(Cube3 &C, int corners_changed[]){
-    for(int i = 0; i < 4; i++){
-        int corner_num=corners_changed[i];
-        int k=0;
-        int arr[3];
-        for(auto &[x,y] : corners[corner_num]){
-            arr[k] = C.Get_num(x, y);
-            k++;
+        for(int k = 0; k < 3; k++){
+            if(arr[k] == 0 || arr[k] == 1){
+                int face = indices[k].first;
+                if(face == 0 || face == 1)       // U/D
+                    orientation = 0;
+                else if(face == 4 || face == 5)  // F/B
+                    orientation = 1;
+                else                              // L/R
+                    orientation = 2;
+                break;
+            }
         }
-        int first = arr[0];
         sort(arr, arr+3);
         int key = arr[0] * 36 + arr[1] * 6 + arr[2];
         int piece = map_int[key];
-        int orientation = 0;
-        for(; orientation<3 && first != arr[orientation]; orientation++);
         current[corner_num].first = piece;
         current[corner_num].second = orientation;
     }

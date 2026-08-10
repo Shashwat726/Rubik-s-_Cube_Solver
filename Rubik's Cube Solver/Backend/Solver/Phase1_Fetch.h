@@ -3,6 +3,7 @@
 #include<iostream>
 #include<fstream>
 #include<unordered_map>
+#include<cstdlib>
 #include"corners.h"
 #include"edges.h"
 #include"Cube_3.h"
@@ -11,14 +12,20 @@ using namespace std;
 
 class Fetcher_1{
     /*
+    Current table format:
+    Phase1_A.bin is indexed by co * 495 + uds.
+    Phase1_B.bin is indexed by eo * 495 + uds.
+    The older 4096/slice-bitmap wording below is retained as a note from the
+    first matrix implementation; the Fetch() function uses the current format.
+
     Loads the Phase 1 databases and provides the heuristic for Phase 1 IDA*.
     
     Data_A : Loaded from Phase1_A.bin
-             Key   = Hash_Orientation() * 4096 + Hash_Slice()
+             Key   = co * 495 + uds
              Value = minimum moves to reach G1 from this corner orientation + slice state
              
     Data_B : Loaded from Phase1_B.bin
-             Key   = Hash_Phase1B() = Hash_Orientation() * 4096 + Hash_Slice()
+             Key   = eo * 495 + uds
              Value = minimum moves to reach G1 from this edge orientation + slice state
 
     O, E   : Used internally to compute hash keys from a given cube state.
@@ -34,20 +41,19 @@ class Fetcher_1{
     Edges E;
     public:
         Fetcher_1();
-        int Fetch(Cube3 &C);
-        bool isG1(Cube3 &C);
+        int Fetch(int co, int eo, int uds);
 };
 
 Fetcher_1::Fetcher_1(){
     
     int key,moves_req;
-    ifstream fileA("databases/Phase1_A.bin", ios::binary);
+    ifstream fileA("../Databases/Phase1_A.bin", ios::binary);
     while(fileA.read((char*)&key, sizeof(int))){
         fileA.read((char*)&moves_req, sizeof(int));
         Data_A[key]=moves_req;
     }
     fileA.close();
-    ifstream fileB("databases/Phase1_B.bin", ios::binary);
+    ifstream fileB("../Databases/Phase1_B.bin", ios::binary);
     while(fileB.read((char*)&key, sizeof(int))){
         fileB.read((char*)&moves_req, sizeof(int));
         Data_B[key]=moves_req;
@@ -55,14 +61,19 @@ Fetcher_1::Fetcher_1(){
     fileB.close();
 }
 
-int Fetcher_1::Fetch(Cube3 &C){
-    O.Preprocess(C);
-    E.Orientation(C);
-    int keyA = O.Hash_Orientation() * 4096 + E.Hash_Slice(C);
-    int keyB = E.Hash_Phase1B(C);
-    return max(Data_A[keyA], Data_B[keyB]);
+int Fetcher_1::Fetch(int co, int eo, int uds){
+    int keyA = co * 495 + uds;
+    int keyB = eo * 495 + uds;
+    auto itA = Data_A.find(keyA);
+auto itB = Data_B.find(keyB);
+
+if (itA == Data_A.end() || itB == Data_B.end()) {
+    std::cerr << "Missing key!\n";
+    std::cerr << "co=" << co
+              << " eo=" << eo
+              << " uds=" << uds << '\n';
+    return 99;
 }
 
-bool Fetcher_1::isG1(Cube3 &C){
-    return (Fetch(C) == 0) ? true : false;
+return std::max(itA->second, itB->second);
 }
