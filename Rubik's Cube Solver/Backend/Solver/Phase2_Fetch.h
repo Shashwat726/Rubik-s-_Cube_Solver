@@ -70,6 +70,6 @@ int Fetcher_2::Fetch(int cp, int ep){
     auto itA = Data_A.find(keyA);
     auto itB = Data_B.find(keyB);
     if (itA == Data_A.end() || itB == Data_B.end())
-        return 0;
-    return max(Data_A[cp],Data_B[ep]);
+        return -1;
+    return max(itA->second, itB->second);
 }

@@ -75,7 +75,7 @@ int Fetcher_1::Fetch(int co, int eo, int uds){
     auto itB = Data_B.find(keyB);
 
 if (itA == Data_A.end() || itB == Data_B.end()) {
-    return 0;
+    return -1;
 }
 
 return max(itA->second, itB->second);

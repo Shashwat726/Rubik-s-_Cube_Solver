@@ -36,7 +36,7 @@ const TURN_CONFIG = {
   F: { axis: 'z', layer: 1, direction: -1 },
   B: { axis: 'z', layer: -1, direction: 1 },
 };
-const SOLVE_VIEW_ROTATION = [Math.PI / 6, -Math.PI / 6, 0];
+const SOLVE_VIEW_ROTATION = [Math.PI / 6, -Math.PI / 4, 0];
 
 // Which face sits up/down/left/right of each face when it's the one facing the camera
 const NEIGHBORS = {
@@ -371,6 +371,10 @@ async function startSolve() {
 
   if (moves[0]?.startsWith('ERROR:')) {
     setMoveInputError(moves[0].slice('ERROR: '.length));
+    setIsSolveMode(true);
+    isSolveModeRef.current = true;
+    setIsSolutionFinished(true);
+    isSolutionFinishedRef.current = true;
     return;
   }
 
@@ -388,7 +392,7 @@ async function startSolve() {
   }
 
   setSolutionMoves(moves);
-  setMoveInputError(moves.length ? `Solution found: ${moves.length} moves.` : 'Cube is already solved.');
+  setMoveInputError('');
   isSolveModeRef.current = true;
   setIsSolveMode(true);
   setRunMode(null);
@@ -408,6 +412,11 @@ async function startSolve() {
     if (isMoveBusy) return;
     const targetIndex = direction === 'next' ? moveIndex : moveIndex - 1;
     if (targetIndex < 0 || targetIndex >= solutionMoves.length) return;
+    
+    if (moveIndex === solutionMoves.length) {
+      focusSolveView();
+    }
+    
     const move = direction === 'next' ? solutionMoves[targetIndex] : inverseMove(solutionMoves[targetIndex]);
     pauseRef.current = false;
     setIsPaused(false);
@@ -489,6 +498,11 @@ function switchToManual() {
 
   function seekToCompletedMove(targetIndex) {
     if (!isPaused || isMoveBusy || targetIndex >= moveIndex) return;
+    
+    if (moveIndex === solutionMoves.length) {
+      focusSolveView();
+    }
+    
     const rewindMoves = solutionMoves.slice(targetIndex, moveIndex).reverse().map(inverseMove);
     if (rewindMoves.length === 0) return;
     clearMoveQueueRef.current?.();
@@ -547,8 +561,14 @@ function switchToManual() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      
+      // On desktop, Z=7. On portrait phones, mathematically scale Z so the cube is exactly 45vw wide.
+      const targetZ = Math.max(7, 4.344 * window.innerHeight / window.innerWidth);
+      camera.position.set(0, camera.position.y, targetZ);
+      camera.lookAt(0, camera.position.y, 0);
     };
     window.addEventListener('resize', handleResize);
+    handleResize(); // Set initial camera position based on screen width
 
     const cubeGroup = new THREE.Group();
     const cubieGeometry = new RoundedBoxGeometry(0.98, 0.98, 0.98, 4, 0.08);
@@ -618,8 +638,7 @@ function switchToManual() {
 
     cubeMeshRef.current = cubeGroup;
     scene.add(cubeGroup);
-    camera.position.set(0, 0, 7);
-    camera.lookAt(0, 0, 0);
+    // Initial camera position is now handled by handleResize() above
 
     const moveQueue = [];
     let activeTurn = null;
@@ -696,6 +715,16 @@ function switchToManual() {
     let animationFrameId;
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
+
+      // Smoothly shift camera Y on mobile when in solve mode
+      if (window.innerWidth <= 600) {
+        const targetY = isSolveModeRef.current ? -1.0 : 0;
+        camera.position.y += (targetY - camera.position.y) * 0.1;
+        camera.lookAt(0, camera.position.y, 0);
+      } else if (Math.abs(camera.position.y) > 0.01) {
+        camera.position.y += (0 - camera.position.y) * 0.1;
+        camera.lookAt(0, camera.position.y, 0);
+      }
 
       const tween = tweenRef.current;
       if (tween) {
@@ -855,27 +884,22 @@ function switchToManual() {
           >
             Solve
           </button>
-          {moveInputError && (
-            <div style={{ position: 'fixed', bottom: '22px', left: '50%', transform: 'translateX(-50%)', color: moveInputError.startsWith('Solution') || moveInputError.startsWith('Cube is') ? '#9bcf9b' : '#e79797', fontSize: '13px', zIndex: 11, whiteSpace: 'nowrap' }}>
-              {moveInputError}
-            </div>
-          )}
         </>
       )}
 
       {mode === 'input' && isSolveMode && (
         <>
-          {!isSolutionFinished && (
+          {!moveInputError && (
             <div className="solver-panel">
-          <div style={{ marginBottom: '9px', textAlign: 'center', color: '#dcdcdc', fontFamily: 'Baskerville, Georgia, serif', fontSize: '15px' }}>Green front · Yellow top · Orange right</div>
+            <div style={{ marginBottom: '9px', textAlign: 'center', color: '#dcdcdc', fontFamily: 'Baskerville, Georgia, serif', fontSize: '15px' }}>Green front · Yellow top · Orange right</div>
           <div className="solver-panel-grid">
-            <button onClick={switchToManual} disabled={isAutoRunning && !isPaused} style={{ padding: '8px 0', borderRadius: '5px', background: '#2b2b2b', color: '#f2f2f2', border: '1px solid #666', cursor: 'pointer', opacity: (isAutoRunning && !isPaused) ? 0.45 : 1 }}>Manual</button>
-            <button onClick={() => changeSpeed(3000)} disabled={isAutoRunning && !isPaused} style={{ padding: '8px 0', borderRadius: '5px', background: '#2b2b2b', color: '#f2f2f2', border: '1px solid #666', cursor: 'pointer', opacity: (isAutoRunning && !isPaused) ? 0.45 : 1 }}>Slow</button>
-            <button onClick={() => changeSpeed(2000)} disabled={isAutoRunning && !isPaused} style={{ padding: '8px 0', borderRadius: '5px', background: '#2b2b2b', color: '#f2f2f2', border: '1px solid #666', cursor: 'pointer', opacity: (isAutoRunning && !isPaused) ? 0.45 : 1 }}>Medium</button>
-            <button onClick={() => changeSpeed(1000)} disabled={isAutoRunning && !isPaused} style={{ padding: '8px 0', borderRadius: '5px', background: '#2b2b2b', color: '#f2f2f2', border: '1px solid #666', cursor: 'pointer', opacity: (isAutoRunning && !isPaused) ? 0.45 : 1 }}>Fast</button>
+            <button className="solver-btn" onClick={switchToManual} disabled={isAutoRunning && !isPaused} style={{ opacity: (isAutoRunning && !isPaused) ? 0.45 : 1 }}>Manual</button>
+            <button className="solver-btn" onClick={() => changeSpeed(3000)} disabled={isAutoRunning && !isPaused} style={{ opacity: (isAutoRunning && !isPaused) ? 0.45 : 1 }}>Slow</button>
+            <button className="solver-btn" onClick={() => changeSpeed(2000)} disabled={isAutoRunning && !isPaused} style={{ opacity: (isAutoRunning && !isPaused) ? 0.45 : 1 }}>Medium</button>
+            <button className="solver-btn" onClick={() => changeSpeed(1000)} disabled={isAutoRunning && !isPaused} style={{ opacity: (isAutoRunning && !isPaused) ? 0.45 : 1 }}>Fast</button>
           </div>
           {isAutoRunning && (
-            <button onClick={togglePlayback} style={{ display: 'block', margin: '9px auto 0', padding: '7px 18px', borderRadius: '5px', background: '#303030', color: '#fff', border: '1px solid #666', cursor: 'pointer' }}>
+            <button className="solver-btn-large" onClick={togglePlayback} style={{ display: 'block', margin: '9px auto 0' }}>
               {isPaused ? 'Play' : 'Pause'}
             </button>
           )}
@@ -900,15 +924,33 @@ function switchToManual() {
           <div style={{ marginTop: '10px', textAlign: 'center', color: '#bcbcbc', fontSize: '13px' }}>Move {moveIndex} of {solutionMoves.length}</div>
           {runMode === 'manual' && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
-              <button onClick={() => runManualMove('previous')} disabled={isMoveBusy || moveIndex === 0} style={{ padding: '8px 18px', borderRadius: '5px', background: '#303030', color: '#fff', border: '1px solid #666', cursor: 'pointer', opacity: isMoveBusy || moveIndex === 0 ? 0.45 : 1 }}>Previous</button>
-              <button onClick={() => runManualMove('next')} disabled={isMoveBusy || moveIndex >= solutionMoves.length} style={{ padding: '8px 18px', borderRadius: '5px', background: '#303030', color: '#fff', border: '1px solid #666', cursor: 'pointer', opacity: isMoveBusy || moveIndex >= solutionMoves.length ? 0.45 : 1 }}>Next</button>
+              <button className="solver-btn-large" onClick={() => runManualMove('previous')} disabled={isMoveBusy || moveIndex === 0} style={{ opacity: isMoveBusy || moveIndex === 0 ? 0.45 : 1 }}>Previous</button>
+              <button className="solver-btn-large" onClick={() => runManualMove('next')} disabled={isMoveBusy || moveIndex >= solutionMoves.length} style={{ opacity: isMoveBusy || moveIndex >= solutionMoves.length ? 0.45 : 1 }}>Next</button>
             </div>
           )}
           {isAutoRunning && <div style={{ marginTop: '8px', textAlign: 'center', color: '#9bcf9b', fontSize: '13px' }}>Running solution...</div>}
             </div>
           )}
 
-          {isSolutionFinished && (solutionMoves.length === 0 || (solutionMoves.length === 1 && solutionMoves[0].startsWith('T'))) && (
+          {moveInputError && (
+            <div className="responsive-subtitle" style={{ 
+              position: 'fixed', 
+              top: '15%', 
+              left: '50%', 
+              transform: 'translateX(-50%)', 
+              zIndex: 11, 
+              whiteSpace: 'normal',
+              textAlign: 'center',
+              width: '100%',
+              pointerEvents: 'none'
+            }}>
+              <div style={{ animation: 'slideUpFade 0.6s ease-out forwards', display: 'inline-block' }}>
+                {moveInputError}
+              </div>
+            </div>
+          )}
+
+          {isSolutionFinished && !moveInputError && (solutionMoves.length === 0 || (solutionMoves.length === 1 && solutionMoves[0].startsWith('T'))) && (
             <div className="responsive-subtitle" style={{
               position: 'fixed',
               top: '15%',
@@ -922,7 +964,7 @@ function switchToManual() {
           )}
 
           {showNewScrambleButton && (
-            <div style={{ position: 'fixed', bottom: '60px', left: '50%', transform: 'translateX(-50%)' }}>
+            <div className="new-scramble-btn-container">
               <button
                 onClick={startInput}
                 style={{
@@ -952,20 +994,24 @@ function switchToManual() {
       <>
       {/* Navigation dots — up/down/left/right of the currently viewed face */}
       <button
+        className="nav-dot-up"
         onClick={() => navigate('up')}
-        style={{ ...dotStyle(CENTER_COLOR[neighbors.up]), position: 'fixed', top: 'calc(50% - 22vh)', left: '50%', transform: 'translate(-50%, -50%)' }}
+        style={dotStyle(CENTER_COLOR[neighbors.up])}
       />
       <button
+        className="nav-dot-down"
         onClick={() => navigate('down')}
-        style={{ ...dotStyle(CENTER_COLOR[neighbors.down]), position: 'fixed', top: 'calc(50% + 22vh)', left: '50%', transform: 'translate(-50%, -50%)' }}
+        style={dotStyle(CENTER_COLOR[neighbors.down])}
       />
       <button
+        className="nav-dot-left"
         onClick={() => navigate('left')}
-        style={{ ...dotStyle(CENTER_COLOR[neighbors.left]), position: 'fixed', top: '50%', left: 'calc(50% - 22vh)', transform: 'translate(-50%, -50%)' }}
+        style={dotStyle(CENTER_COLOR[neighbors.left])}
       />
       <button
+        className="nav-dot-right"
         onClick={() => navigate('right')}
-        style={{ ...dotStyle(CENTER_COLOR[neighbors.right]), position: 'fixed', top: '50%', left: 'calc(50% + 22vh)', transform: 'translate(-50%, -50%)' }}
+        style={dotStyle(CENTER_COLOR[neighbors.right])}
       />
 
       {activePopup && (

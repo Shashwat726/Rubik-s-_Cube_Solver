@@ -7,7 +7,6 @@
 
 // Input: 54 integers in U, D, L, R, F, B order.
 std::vector<std::string> solveCube(const std::vector<int>& flat) {
-    ifstream test("/Databases/CO.bin", ios::binary);
 
     if (flat.size() != 54) return {"ERROR: expected 54 values"};
 
