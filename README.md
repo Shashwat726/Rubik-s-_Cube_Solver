@@ -1,6 +1,10 @@
 # Rubik's Cube Solver
 
-A 3x3 Rubik's Cube solver written in C++, built around Kociemba's Two-Phase Algorithm.
+**🌐 Live Demo:** [https://rubik-s-cubesolver.vercel.app](https://rubik-s-cubesolver.vercel.app)
+
+A 3x3 Rubik's Cube solver written in C++, built around Kociemba's Two-Phase Algorithm, featuring a fully interactive 3D WebAssembly frontend!
+
+*To use the solver directly, just visit the website above. To build or run the project locally, see the instructions below.*
 
 The project started with a sticker-matrix solver and pattern databases. It now also has a table-based search path: the cube is converted into five integer coordinates, and every search move is a lookup instead of a full matrix rotation. That change is what made the solver feel instant on the scrambles I have tested.
 
